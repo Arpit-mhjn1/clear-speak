@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClearSpeak - ASL Translator</title>
+  <style>
+    /* Modern Dark Theme */
+    :root {
+      --bg-color: #121212;
+      --container-bg: #1e1e1e;
+      --accent-color: #00e5ff;
+      --accent-hover: #00b3cc;
+      --text-color: #ffffff;
+      --text-secondary: #aaaaaa;
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 800px;
+      padding: 20px;
+    }
+
+    h1 {
+      color: var(--accent-color);
+      margin-bottom: 5px;
+      font-size: 2.5rem;
+      letter-spacing: 1px;
+    }
+    
+    p.subtitle {
+      color: var(--text-secondary);
+      margin-bottom: 25px;
+      font-size: 1.1rem;
+    }
+
+    button {
+      background-color: var(--accent-color);
+      color: var(--bg-color);
+      border: none;
+      padding: 12px 32px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: background-color 0.3s, transform 0.1s;
+      box-shadow: 0 4px 6px rgba(0, 229, 255, 0.2);
+    }
+
+    button:hover {
+      background-color: var(--accent-hover);
+    }
+    
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .video-container {
+      position: relative;
+      width: 640px;
+      height: 480px;
+      background-color: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      margin-bottom: 25px;
+      display: none; /* Hidden until camera starts */
+    }
+
+    video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1); /* Mirror the video */
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transform: scaleX(-1); /* Mirror the canvas to match video */
+      pointer-events: none; /* Let clicks pass through */
+    }
+
+    .transcript-box {
+      width: 100%;
+      max-width: 640px;
+      background-color: var(--container-bg);
+      border-radius: 12px;
+      padding: 20px 25px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      min-height: 120px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .transcript-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 10px;
+    }
+
+    .transcript-box h2 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .status {
+      font-size: 14px;
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-color);
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 0.5; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    #transcript {
+      font-size: 28px;
+      font-weight: 500;
+      line-height: 1.5;
+      margin: 0;
+      word-wrap: break-word;
+      color: var(--text-color);
+      flex-grow: 1;
+    }
+
+    .loading-text {
+      color: var(--text-secondary);
+      font-size: 16px;
+      text-align: center;
+      margin-top: 220px;
+      font-style: italic;
+      position: relative;
+      z-index: 10;
+    }
+  </style>
+
+  <!-- MediaPipe Libraries from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="app-container">
+    <h1>ClearSpeak</h1>
+    <p class="subtitle">Real-time Sign Language Translator MVP</p>
+    
+    <button id="startButton">Start Camera</button>
+    
+    <div class="video-container" id="videoContainer">
+      <video id="video" autoplay playsinline></video>
+      <canvas id="canvas"></canvas>
+      <div id="loading" class="loading-text">Loading Camera & Models...</div>
+    </div>
+    
+    <div class="transcript-box">
+      <div class="transcript-header">
+        <h2>Transcript</h2>
+        <div class="status" id="statusIndicator" style="display: none;">
+          <span class="status-dot"></span> Listening
+        </div>
+      </div>
+      <p id="transcript">Click "Start Camera" to begin.</p>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. App State & DOM Elements
+    // ==========================================
+    const videoElement = document.getElementById('video');
+    const canvasElement = document.getElementById('canvas');
+    const canvasCtx = canvasElement.getContext('2d');
+    
+    const startButton = document.getElementById('startButton');
+    const transcriptElement = document.getElementById('transcript');
+    const videoContainer = document.getElementById('videoContainer');
+    const loadingText = document.getElementById('loading');
+    const statusIndicator = document.getElementById('statusIndicator');
+
+    let cameraStarted = false;
+    let currentGesture = null;
+    let gestureFrames = 0;
+    const GESTURE_THRESHOLD = 30; // Debounce: Hold gesture for 30 frames
+    let transcriptText = "";
+
+    // Speech Synthesis initialization
+    const synth = window.speechSynthesis;
+
+    // ==========================================
+    // 2. MediaPipe Hands Setup
+    // ==========================================
+    const hands = new Hands({locateFile: (file) => {
+      return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+    }});
+
+    hands.setOptions({
+      maxNumHands: 1, // Focus on a single hand for the MVP
+      modelComplexity: 1,
+      minDetectionConfidence: 0.7,
+      minTrackingConfidence: 0.7
+    });
+
+    hands.onResults(onResults);
+
+    // ==========================================
+    // 3. Process Frame Results
+    // ==========================================
+    function onResults(results) {
+      // Hide loading state on first successful frame
+      if (loadingText.style.display !== 'none') {
+        loadingText.style.display = 'none';
+        statusIndicator.style.display = 'flex';
+      }
+
+      // Clear previous canvas drawing
+      canvasCtx.save();
+      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      
+      // Note: Video is displayed natively via CSS beneath the canvas, 
+      // so we don't need to explicitly draw results.image to the canvas.
+
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const landmarks = results.multiHandLandmarks[0];
+        
+        // Draw the hand skeleton over the video
+        drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: 'rgba(0, 229, 255, 0.8)', lineWidth: 3});
+        drawLandmarks(canvasCtx, landmarks, {color: '#FFFFFF', lineWidth: 1, radius: 4});
+
+        // Evaluate Hand Position
+        const detectedGesture = recognizeGesture(landmarks);
+        
+        // Debounce Logic
+        if (detectedGesture) {
+          if (detectedGesture === currentGesture) {
+            gestureFrames++;
+            // Trigger action exactly when frame threshold is met
+            if (gestureFrames === GESTURE_THRESHOLD) {
+              triggerAction(detectedGesture);
+            }
+          } else {
+            // Started a new recognized gesture
+            currentGesture = detectedGesture;
+            gestureFrames = 1;
+          }
+        } else {
+          // No recognizable gesture
+          currentGesture = null;
+          gestureFrames = 0;
+        }
+      } else {
+        // No hands in frame
+        currentGesture = null;
+        gestureFrames = 0;
+      }
+      canvasCtx.restore();
+    }
+
+    // ==========================================
+    // 4. Gesture Heuristics (Math & Logic)
+    // ==========================================
+    function recognizeGesture(landmarks) {
+      /*
+        Hand Landmark Reference (21 points):
+        0: Wrist
+        1-4: Thumb (4 is tip)
+        5-8: Index Finger (8 is tip, 6 is PIP joint)
+        9-12: Middle Finger (12 is tip, 10 is PIP)
+        13-16: Ring Finger (16 is tip, 14 is PIP)
+        17-20: Pinky (20 is tip, 18 is PIP)
+
+        Y-axis in MediaPipe goes from 0 (top) to 1 (bottom).
+        A smaller y-value means the point is physically "higher up" in the frame.
+      */
+
+      // A finger is considered "open/extended" if its tip (e.g. 8) is higher than its middle joint (e.g. 6).
+      const isIndexOpen = landmarks[8].y < landmarks[6].y;
+      const isMiddleOpen = landmarks[12].y < landmarks[10].y;
+      const isRingOpen = landmarks[16].y < landmarks[14].y;
+      const isPinkyOpen = landmarks[20].y < landmarks[18].y;
+
+      // Thumb logic is slightly different due to its orientation.
+      // 1. Is thumb pointing up? (Tip y is higher than the base y)
+      const isThumbUp = landmarks[4].y < landmarks[3].y;
+      
+      // 2. Is thumb extended horizontally? 
+      // Calculate distance between thumb tip(4) and index base(5).
+      const thumbDistToIndex = Math.hypot(landmarks[4].x - landmarks[5].x, landmarks[4].y - landmarks[5].y);
+      const isThumbOpen = thumbDistToIndex > 0.1; // Threshold for Euclidean distance
+
+      // --- GESTURE 1: "Hello" (Open Hand) ---
+      // All four fingers are open, and thumb is extended away from hand.
+      if (isIndexOpen && isMiddleOpen && isRingOpen && isPinkyOpen && isThumbOpen) {
+        return "Hello";
+      }
+
+      // --- GESTURE 2: "Stop" (Closed Fist) ---
+      // All four fingers are folded down.
+      if (!isIndexOpen && !isMiddleOpen && !isRingOpen && !isPinkyOpen) {
+        
+        // Edge Case / GESTURE 3: "Good" (Thumbs Up)
+        // If fingers are folded, but the thumb tip is significantly higher 
+        // than the index finger base joint, it's a thumbs up.
+        if (isThumbUp && landmarks[4].y < landmarks[5].y) {
+          return "Good";
+        }
+        
+        return "Stop";
+      }
+
+      // Return null if the hand position doesn't cleanly match a known gesture
+      return null; 
+    }
+
+    // ==========================================
+    // 5. Action Handlers (TTS & UI)
+    // ==========================================
+    function triggerAction(word) {
+      // Append text with space
+      if (transcriptText === "") {
+        transcriptText = word;
+      } else {
+        transcriptText += " " + word;
+      }
+      transcriptElement.innerText = transcriptText;
+
+      // Text-to-Speech
+      synth.cancel(); // Cancel any ongoing speech to prevent overlap/spamming
+      const utterance = new SpeechSynthesisUtterance(word);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      synth.speak(utterance);
+    }
+
+    // ==========================================
+    // 6. Start Camera & App
+    // ==========================================
+    startButton.addEventListener('click', async () => {
+      if (cameraStarted) return;
+      
+      // UI Transitions
+      startButton.style.display = 'none';
+      videoContainer.style.display = 'block';
+      transcriptElement.innerText = ""; // Clear instructional text
+      
+      // Sync canvas dimensions with video explicitly
+      canvasElement.width = 640;
+      canvasElement.height = 480;
+
+      // Initialize MediaPipe Camera utility
+      const camera = new Camera(videoElement, {
+        onFrame: async () => {
+          await hands.send({image: videoElement});
+        },
+        width: 640,
+        height: 480
+      });
+
+      // Start stream
+      camera.start().then(() => {
+        cameraStarted = true;
+      }).catch(err => {
+        alert('Failed to start camera. Please ensure webcam permissions are granted. Error: ' + err.message);
+        startButton.style.display = 'block';
+        videoContainer.style.display = 'none';
+      });
+    });
+  </script>
+</body>
+</html>
