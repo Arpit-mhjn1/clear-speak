@@ -1,1 +1,2 @@
-"# clear-speak" 
+#ClearSpeak: Real-Time Sign Language Translation
+
