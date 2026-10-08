@@ -1,2 +1,2 @@
-#ClearSpeak: Real-Time Sign Language Translation
+# ClearSpeak: Real-Time Sign Language Translation
 
