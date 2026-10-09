@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClearSpeak - Text to Sign</title>
+
+  <!-- MediaPipe Libraries for drawing -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+  <style>
+    /* Modern Dark Theme */
+    :root {
+      --bg-color: #0f1115;
+      --container-bg: #1a1d24;
+      --card-bg: #232730;
+      --accent-color: #00e5ff;
+      --accent-hover: #00b3cc;
+      --text-color: #f1f1f1;
+      --text-secondary: #a0a5b1;
+      --border-color: #333842;
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* Sidebar Navigation */
+    .app-container {
+      display: flex;
+      flex-direction: row;
+      flex-grow: 1;
+      width: 100%;
+      overflow: hidden;
+      min-height: 100vh;
+    }
+    
+    .sidebar {
+      width: 250px;
+      background-color: var(--container-bg);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 0;
+      transition: margin-left 0.3s ease;
+      z-index: 90;
+    }
+    .sidebar.hidden {
+      margin-left: -250px;
+    }
+    
+    .sidebar-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0 15px;
+    }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      font-size: 1.05rem;
+    }
+    .menu-item:hover {
+      background-color: rgba(0, 229, 255, 0.1);
+      color: var(--accent-color);
+    }
+    .menu-item.active {
+      background-color: var(--accent-color);
+      color: var(--bg-color);
+    }
+    .menu-icon { font-size: 1.2rem; }
+    
+    .main-content {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+      padding-top: 40px;
+      height: calc(100vh - 67px);
+      width: 100%;
+    }
+    
+    .toggle-btn {
+      background: none;
+      border: none;
+      color: var(--text-color);
+      font-size: 1.5rem;
+      cursor: pointer;
+      margin-right: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .toggle-btn:hover { color: var(--accent-color); }
+
+    /* Text-to-Sign Dashboard */
+    .dashboard {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 25px;
+      padding: 0 40px 40px 40px;
+      max-width: 1400px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .generator-panel {
+      flex: 1 1 600px;
+      background-color: var(--container-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .panel-header {
+      padding: 15px 25px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: rgba(0,0,0,0.1);
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      background-color: #000;
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .controls-panel {
+      flex: 1 1 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .input-card {
+      background-color: var(--container-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      padding: 25px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      color: white;
+      font-size: 1.2rem;
+      padding: 15px;
+      resize: vertical;
+      box-sizing: border-box;
+      font-family: inherit;
+      transition: border-color 0.3s;
+      margin-bottom: 20px;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.2);
+    }
+
+    .btn-primary {
+      background-color: var(--accent-color);
+      color: var(--bg-color);
+      border: none;
+      padding: 14px 28px;
+      font-size: 1.05rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 229, 255, 0.3);
+    }
+
+    .status-text {
+      color: var(--accent-color);
+      font-weight: bold;
+      margin-top: 15px;
+      text-align: center;
+      min-height: 24px;
+    }
+
+    .current-word {
+      font-size: 2rem;
+      font-weight: bold;
+      color: white;
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.6);
+      padding: 5px 20px;
+      border-radius: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav style="padding: 15px 40px; border-bottom: 1px solid #333; background-color: var(--container-bg); max-width: 100%; margin-bottom: 0;">
+    <div style="display: flex; align-items: center;">
+      <button id="sidebarToggle" class="toggle-btn">☰</button>
+      <a href="index.html" class="nav-brand" style="display: flex; align-items: center; gap: 12px; font-size: 1.4rem; font-weight: bold; color: var(--accent-color); text-decoration: none;">
+        <img src="logo.png" alt="ClearSpeak" style="height: 35px; border-radius: 6px;">
+        ClearSpeak
+      </a>
+    </div>
+  </nav>
+
+  <div class="app-container">
+    <!-- Side Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-menu">
+        <a href="index.html" class="menu-item">
+          <span class="menu-icon">🏠</span> Home
+        </a>
+        <a href="app.html" class="menu-item">
+          <span class="menu-icon">📹</span> Live Translator
+        </a>
+        <a href="tts.html" class="menu-item">
+          <span class="menu-icon">🔊</span> Text-to-Speech
+        </a>
+        <a href="text-to-sign.html" class="menu-item active">
+          <span class="menu-icon">✨</span> Text-to-Sign
+        </a>
+        <a href="https://drive.google.com/drive/folders/1U-Pr4r1-cupgNOOq9NH_uTsQnPSVEKco" target="_blank" class="menu-item">
+          <span class="menu-icon">📚</span> Dictionary Data
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <div class="dashboard">
+        
+        <!-- Canvas Panel -->
+        <div class="generator-panel">
+          <div class="panel-header">
+            <h2>Generative Sign Avatar</h2>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="avatarCanvas" width="640" height="480"></canvas>
+            <div id="currentWordDisplay" class="current-word"></div>
+          </div>
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+          <div class="input-card">
+            <h2 style="margin-top: 0; margin-bottom: 15px; font-size: 1.3rem;">Generate Sign Language</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px; line-height: 1.4;">
+              Type a sentence below. ClearSpeak's Generative AI will synthesize the corresponding Indian Sign Language gestures using dynamic wireframe avatars!
+            </p>
+            <textarea id="textInput" placeholder="Enter text to translate into sign language..."></textarea>
+            <button id="generateBtn" class="btn-primary">✨ Generate Avatar</button>
+            <div id="statusText" class="status-text"></div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById('sidebarToggle').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('hidden');
+    });
+
+    const canvas = document.getElementById('avatarCanvas');
+    const ctx = canvas.getContext('2d');
+    const generateBtn = document.getElementById('generateBtn');
+    const textInput = document.getElementById('textInput');
+    const statusText = document.getElementById('statusText');
+    const currentWordDisplay = document.getElementById('currentWordDisplay');
+
+    let islDictionary = {};
+    let isPlaying = false;
+
+    // Fetch Dictionary
+    fetch('isl_dictionary.json')
+      .then(res => res.json())
+      .then(data => {
+        islDictionary = data;
+        // Also build a lowercase map for easier searching
+        window.lowerDict = {};
+        for (const [key, val] of Object.entries(data)) {
+          window.lowerDict[key.toLowerCase()] = { originalKey: key, frames: val };
+        }
+      });
+
+    generateBtn.addEventListener('click', async () => {
+      if (isPlaying) return;
+      if (Object.keys(islDictionary).length === 0) {
+        statusText.innerText = "Dictionary not loaded yet!";
+        return;
+      }
+
+      const text = textInput.value.trim().toLowerCase();
+      if (!text) return;
+
+      isPlaying = true;
+      statusText.innerText = "Generating sequence...";
+      generateBtn.style.opacity = "0.5";
+
+      // Tokenize: remove punctuation, split by space
+      const words = text.replace(/[.,!?]/g, '').split(/\s+/);
+      
+      const sequenceQueue = [];
+
+      for (const word of words) {
+        if (window.lowerDict[word]) {
+          // Found exact word match!
+          sequenceQueue.push({
+            word: window.lowerDict[word].originalKey,
+            frames: window.lowerDict[word].frames
+          });
+        } else {
+          // Fallback to spelling it out letter by letter
+          for (const letter of word) {
+            if (window.lowerDict[letter]) {
+              sequenceQueue.push({
+                word: letter.toUpperCase(),
+                frames: window.lowerDict[letter].frames
+              });
+            }
+          }
+        }
+      }
+
+      if (sequenceQueue.length === 0) {
+        statusText.innerText = "No recognizable signs found.";
+        isPlaying = false;
+        generateBtn.style.opacity = "1";
+        return;
+      }
+
+      statusText.innerText = "Playing animation...";
+
+      // Animation Loop
+      for (const item of sequenceQueue) {
+        currentWordDisplay.innerText = item.word.replace(/_/g, ' ');
+        
+        // Play the 15 frames for this item
+        for (let i = 0; i < item.frames.length; i++) {
+          renderFrame(item.frames[i]);
+          await sleep(60); // approx 16fps (MediaPipe extraction rate)
+        }
+        
+        // Pause briefly between words
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        await sleep(300); 
+      }
+
+      currentWordDisplay.innerText = "";
+      statusText.innerText = "Generation complete!";
+      isPlaying = false;
+      generateBtn.style.opacity = "1";
+    });
+
+    function renderFrame(rawLandmarks) {
+      ctx.save();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Transform from relative (-0.2 to 0.2) to absolute (0 to 1) for the drawing utility
+      // Scale them up a bit so the hand fills the screen better
+      const scale = 1.5; 
+      
+      const convertedLandmarks = rawLandmarks.map(lm => ({
+        x: (lm.x * scale) + 0.5,
+        y: (lm.y * scale) + 0.5,
+        z: lm.z
+      }));
+
+      // Draw using MediaPipe's utilities
+      if (typeof drawConnectors !== 'undefined' && typeof HAND_CONNECTIONS !== 'undefined') {
+        drawConnectors(ctx, convertedLandmarks, HAND_CONNECTIONS, {color: '#00e5ff', lineWidth: 5});
+        drawLandmarks(ctx, convertedLandmarks, {color: '#ffffff', lineWidth: 2, radius: 4});
+      } else {
+        // Fallback drawing if utilities fail to load
+        ctx.fillStyle = "white";
+        for (const lm of convertedLandmarks) {
+          ctx.beginPath();
+          ctx.arc(lm.x * canvas.width, lm.y * canvas.height, 5, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  </script>
+</body>
+</html>
