@@ -301,6 +301,9 @@
             </p>
             <textarea id="textInput" placeholder="Enter text to translate into sign language..."></textarea>
             <button id="generateBtn" class="btn-primary">✨ Generate Avatar</button>
+            <div style="text-align: center; margin-top: 15px;">
+              <a href="#" id="editApiKeyBtn" style="color: var(--text-secondary); font-size: 0.9rem; text-decoration: none;">⚙️ Edit Groq API Key</a>
+            </div>
             <div id="statusText" class="status-text"></div>
           </div>
         </div>
@@ -399,7 +402,7 @@ RULES:
                 console.log("Groq Translated:", translatedText);
             } else {
                 console.error("Groq API Error:", await response.text());
-                localStorage.removeItem('groqApiKey');
+                // Removed API key deletion so user isn't prompted again on rate limits
             }
         } catch (err) {
             console.error("Groq Fetch Error:", err);
@@ -502,6 +505,16 @@ RULES:
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
     }
+
+    document.getElementById('editApiKeyBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      const currentKey = localStorage.getItem('groqApiKey') || '';
+      const newKey = prompt("Update your Groq API Key:", currentKey);
+      if (newKey !== null) {
+        localStorage.setItem('groqApiKey', newKey.trim());
+        alert("API Key updated successfully!");
+      }
+    });
   </script>
 </body>
 </html>
