@@ -7,12 +7,14 @@
   <style>
     /* Modern Dark Theme */
     :root {
-      --bg-color: #121212;
-      --container-bg: #1e1e1e;
+      --bg-color: #0f1115;
+      --container-bg: #1a1d24;
+      --card-bg: #232730;
       --accent-color: #00e5ff;
       --accent-hover: #00b3cc;
-      --text-color: #ffffff;
-      --text-secondary: #aaaaaa;
+      --text-color: #f1f1f1;
+      --text-secondary: #a0a5b1;
+      --border-color: #333842;
     }
 
     body {
@@ -20,38 +22,91 @@
       background-color: var(--bg-color);
       color: var(--text-color);
       font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* Layout */
+    .app-container {
+      display: flex;
+      flex-direction: row;
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 250px;
+      background-color: var(--container-bg);
+      border-right: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-      box-sizing: border-box;
+      padding: 25px 0;
+      flex-shrink: 0;
+      box-shadow: 4px 0 15px rgba(0,0,0,0.2);
+      z-index: 100;
     }
 
-    /* Navigation */
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      max-width: 800px;
-      padding: 20px 0;
-      margin-bottom: 40px;
-    }
-
-    .nav-brand {
+    .sidebar-brand {
       display: flex;
       align-items: center;
-      gap: 15px;
-      font-size: 1.5rem;
+      gap: 12px;
+      padding: 0 25px 30px 25px;
+      font-size: 1.4rem;
       font-weight: bold;
       color: var(--accent-color);
       text-decoration: none;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
     }
 
-    .nav-brand img {
-      height: 40px;
+    .sidebar-brand img {
+      height: 35px;
+      border-radius: 6px;
+    }
+    
+    .sidebar-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0 15px;
+      flex-grow: 1;
+    }
+    
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 12px 20px;
       border-radius: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      font-size: 1.05rem;
+    }
+    
+    .menu-item:hover {
+      background-color: rgba(0, 229, 255, 0.1);
+      color: var(--accent-color);
+    }
+    
+    .menu-item.active {
+      background-color: var(--accent-color);
+      color: var(--bg-color);
+    }
+    
+    .menu-icon {
+      font-size: 1.2rem;
+    }
+
+    .main-content {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+      height: 100vh;
+      box-sizing: border-box;
+      padding: 50px 20px;
     }
 
     /* TTS Container */
@@ -63,6 +118,7 @@
       padding: 40px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
       box-sizing: border-box;
+      border: 1px solid var(--border-color);
     }
 
     h1 {
@@ -81,8 +137,8 @@
     textarea {
       width: 100%;
       height: 200px;
-      background-color: #2a2a2a;
-      border: 2px solid #333;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
       border-radius: 12px;
       color: white;
       font-size: 1.2rem;
@@ -97,6 +153,7 @@
     textarea:focus {
       outline: none;
       border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.2);
     }
 
     .controls {
@@ -113,7 +170,7 @@
       padding: 14px 32px;
       font-size: 1.1rem;
       font-weight: bold;
-      border-radius: 30px;
+      border-radius: 8px;
       cursor: pointer;
       transition: all 0.3s ease;
       box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);
@@ -128,50 +185,65 @@
       box-shadow: 0 6px 20px rgba(0, 229, 255, 0.4);
     }
 
-    button:active {
-      transform: scale(0.98);
-    }
-
     button.clear-btn {
       background-color: transparent;
       color: var(--text-secondary);
-      border: 2px solid #444;
+      border: 1px solid var(--border-color);
       box-shadow: none;
     }
 
     button.clear-btn:hover {
-      background-color: #333;
+      background-color: var(--card-bg);
       color: white;
       transform: none;
-      box-shadow: none;
     }
   </style>
 </head>
 <body>
 
-  <nav>
-    <a href="index.html" class="nav-brand">
-      <img src="logo.png" alt="ClearSpeak Logo">
+<div class="app-container">
+  <!-- Side Navigation -->
+  <aside class="sidebar">
+    <a href="index.html" class="sidebar-brand">
+      <img src="logo.png" alt="ClearSpeak">
       ClearSpeak
     </a>
-    <a href="index.html" style="color: var(--text-secondary); text-decoration: none;">&larr; Back to Home</a>
-  </nav>
-
-  <div class="tts-container">
-    <h1>Text to Speech</h1>
-    <p class="subtitle">Type or paste any text below, and ClearSpeak will read it out loud.</p>
     
-    <textarea id="textInput" placeholder="Hello, how are you doing today?"></textarea>
-    
-    <div class="controls">
-      <button id="speakBtn">
-        🔊 Speak Loudly
-      </button>
-      <button id="clearBtn" class="clear-btn">
-        Clear Text
-      </button>
+    <div class="sidebar-menu">
+      <a href="index.html" class="menu-item">
+        <span class="menu-icon">🏠</span> Home
+      </a>
+      <a href="app.html" class="menu-item">
+        <span class="menu-icon">📹</span> Live Translator
+      </a>
+      <a href="tts.html" class="menu-item active">
+        <span class="menu-icon">🔊</span> Text-to-Speech
+      </a>
+      <a href="https://drive.google.com/drive/folders/1U-Pr4r1-cupgNOOq9NH_uTsQnPSVEKco" target="_blank" class="menu-item">
+        <span class="menu-icon">📚</span> Dictionary Data
+      </a>
     </div>
-  </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <div class="tts-container">
+      <h1>Text to Speech</h1>
+      <p class="subtitle">Type or paste any text below, and ClearSpeak will read it out loud.</p>
+      
+      <textarea id="textInput" placeholder="Hello, how are you doing today?"></textarea>
+      
+      <div class="controls">
+        <button id="speakBtn">
+          🔊 Speak Loudly
+        </button>
+        <button id="clearBtn" class="clear-btn">
+          Clear Text
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
 
   <script>
     const textInput = document.getElementById('textInput');
@@ -185,10 +257,9 @@
         synth.cancel(); // Cancel any ongoing speech
         const utterance = new SpeechSynthesisUtterance(textToSpeak);
         
-        // Make it slightly louder and clearer
         utterance.rate = 1.0;
         utterance.pitch = 1.0;
-        utterance.volume = 1.0; // Max volume
+        utterance.volume = 1.0;
         
         synth.speak(utterance);
       }
@@ -202,7 +273,6 @@
       textInput.focus();
     });
 
-    // Also allow Ctrl+Enter to speak
     textInput.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         speakText();
