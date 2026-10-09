@@ -245,62 +245,123 @@
     hands.onResults(onResults);
 
     // ==========================================
-    // 3. Process Frame Results
+    // 3. Process Frame Results & Dynamic Dictionary
     // ==========================================
+    let frameBuffer = [];
+    let islDictionary = {};
+    
+    // Attempt to load the JSON dictionary if it exists
+    fetch('isl_dictionary.json')
+      .then(res => res.json())
+      .then(data => {
+        islDictionary = data;
+        console.log("Loaded ISL Dictionary with " + Object.keys(data).length + " signs.");
+      })
+      .catch(err => console.log("No isl_dictionary.json found yet. Using fallback heuristics."));
+
     function onResults(results) {
-      // Hide loading state on first successful frame
       if (loadingText.style.display !== 'none') {
         loadingText.style.display = 'none';
         statusIndicator.style.display = 'flex';
       }
 
-      // Clear previous canvas drawing
       canvasCtx.save();
       canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-      
-      // Note: Video is displayed natively via CSS beneath the canvas, 
-      // so we don't need to explicitly draw results.image to the canvas.
 
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const landmarks = results.multiHandLandmarks[0];
         
-        // Draw the hand skeleton over the video
         drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: 'rgba(0, 229, 255, 0.8)', lineWidth: 3});
         drawLandmarks(canvasCtx, landmarks, {color: '#FFFFFF', lineWidth: 1, radius: 4});
 
-        // Evaluate Hand Position
-        const detectedGesture = recognizeGesture(landmarks);
+        // Normalize landmarks relative to wrist (translation invariance)
+        const wrist = landmarks[0];
+        const normalized = landmarks.map(lm => ({
+            x: lm.x - wrist.x, 
+            y: lm.y - wrist.y, 
+            z: lm.z - wrist.z
+        }));
         
-        // Debounce Logic
+        // Add to rolling frame buffer (15 frames)
+        frameBuffer.push(normalized);
+        if (frameBuffer.length > GESTURE_THRESHOLD / 2) {
+            frameBuffer.shift(); 
+        }
+
+        let detectedGesture = null;
+
+        // 1. Check dynamic dictionary
+        if (Object.keys(islDictionary).length > 0 && frameBuffer.length === (GESTURE_THRESHOLD / 2)) {
+            detectedGesture = matchDynamicGesture(frameBuffer, islDictionary);
+        }
+
+        // 2. Fallback to basic heuristics
+        if (!detectedGesture) {
+            detectedGesture = recognizeStaticGesture(landmarks);
+        }
+        
         if (detectedGesture) {
           if (detectedGesture === currentGesture) {
             gestureFrames++;
-            // Trigger action exactly when frame threshold is met
             if (gestureFrames === GESTURE_THRESHOLD) {
               triggerAction(detectedGesture);
             }
           } else {
-            // Started a new recognized gesture
             currentGesture = detectedGesture;
             gestureFrames = 1;
           }
         } else {
-          // No recognizable gesture
           currentGesture = null;
           gestureFrames = 0;
         }
       } else {
-        // No hands in frame
         currentGesture = null;
         gestureFrames = 0;
+        frameBuffer = []; // clear buffer if hand lost
       }
       canvasCtx.restore();
     }
+    
+    // ==========================================
+    // 4. Gesture Matching Logic
+    // ==========================================
+    function matchDynamicGesture(buffer, dictionary) {
+        let bestMatch = null;
+        let bestScore = Infinity;
+        
+        for (const [word, templateFrames] of Object.entries(dictionary)) {
+            // Very simple DTW/Euclidean distance placeholder for MVP
+            let totalDist = 0;
+            const framesToCompare = Math.min(buffer.length, templateFrames.length);
+            
+            for (let i = 0; i < framesToCompare; i++) {
+                let frameDist = 0;
+                for (let j = 0; j < 21; j++) {
+                    const live = buffer[i][j];
+                    const temp = templateFrames[i][j];
+                    const dx = live.x - temp.x;
+                    const dy = live.y - temp.y;
+                    const dz = live.z - temp.z;
+                    frameDist += Math.sqrt(dx*dx + dy*dy + dz*dz);
+                }
+                totalDist += frameDist;
+            }
+            
+            const avgDist = totalDist / (framesToCompare * 21);
+            if (avgDist < bestScore) {
+                bestScore = avgDist;
+                bestMatch = word;
+            }
+        }
+        
+        // Confidence threshold
+        if (bestScore < 0.15) {
+            return bestMatch;
+        }
+        return null;
+    }
 
-    // ==========================================
-    // 4. Gesture Heuristics (Math & Logic)
-    // ==========================================
-    function recognizeGesture(landmarks) {
+    function recognizeStaticGesture(landmarks) {
       /*
         Hand Landmark Reference (21 points):
         0: Wrist
