@@ -526,7 +526,7 @@
     const synth = window.speechSynthesis;
 
     // Load ISL Dictionary
-    let frameBuffer = [];
+    let frameBuffer = {};
     let islDictionary = {};
     fetch('isl_dictionary.json')
       .then(res => res.json())
@@ -544,7 +544,7 @@
     }});
     
     hands.setOptions({
-      maxNumHands: 1,
+      maxNumHands: 2,
       modelComplexity: 1,
       minDetectionConfidence: 0.5,
       minTrackingConfidence: 0.5
@@ -569,41 +569,62 @@
       canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        const landmarks = results.multiHandLandmarks[0];
+        let anyDetectedGesture = null;
         
-        drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: 'rgba(0, 229, 255, 0.8)', lineWidth: 4});
-        drawLandmarks(canvasCtx, landmarks, {color: '#FFFFFF', lineWidth: 1, radius: 5});
+        for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+          const landmarks = results.multiHandLandmarks[i];
+          const handedness = results.multiHandedness ? results.multiHandedness[i].label : `hand_${i}`;
+          
+          if (!frameBuffer[handedness]) {
+             frameBuffer[handedness] = [];
+          }
 
-        // Normalize landmarks
-        const wrist = landmarks[0];
-        const normalized = landmarks.map(lm => ({
-            x: lm.x - wrist.x, 
-            y: lm.y - wrist.y, 
-            z: lm.z - wrist.z
-        }));
+          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: 'rgba(0, 229, 255, 0.8)', lineWidth: 4});
+          drawLandmarks(canvasCtx, landmarks, {color: '#FFFFFF', lineWidth: 1, radius: 5});
+
+          // Normalize landmarks
+          const wrist = landmarks[0];
+          const normalized = landmarks.map(lm => ({
+              x: lm.x - wrist.x, 
+              y: lm.y - wrist.y, 
+              z: lm.z - wrist.z
+          }));
+          
+          frameBuffer[handedness].push(normalized);
+          if (frameBuffer[handedness].length > GESTURE_THRESHOLD / 2) {
+              frameBuffer[handedness].shift(); 
+          }
+
+          let detectedGesture = null;
+
+          if (Object.keys(islDictionary).length > 0 && frameBuffer[handedness].length === (GESTURE_THRESHOLD / 2)) {
+              detectedGesture = matchDynamicGesture(frameBuffer[handedness], islDictionary);
+          }
+          if (!detectedGesture) {
+              detectedGesture = recognizeStaticGesture(landmarks);
+          }
+          
+          if (detectedGesture) {
+             anyDetectedGesture = detectedGesture;
+          }
+        }
         
-        frameBuffer.push(normalized);
-        if (frameBuffer.length > GESTURE_THRESHOLD / 2) {
-            frameBuffer.shift(); 
+        // Remove old hands that are no longer detected
+        const currentLabels = results.multiHandedness ? results.multiHandedness.map(h => h.label) : results.multiHandLandmarks.map((_, i) => `hand_${i}`);
+        for (const key of Object.keys(frameBuffer)) {
+           if (!currentLabels.includes(key)) {
+               frameBuffer[key] = [];
+           }
         }
 
-        let detectedGesture = null;
-
-        if (Object.keys(islDictionary).length > 0 && frameBuffer.length === (GESTURE_THRESHOLD / 2)) {
-            detectedGesture = matchDynamicGesture(frameBuffer, islDictionary);
-        }
-        if (!detectedGesture) {
-            detectedGesture = recognizeStaticGesture(landmarks);
-        }
-        
-        if (detectedGesture) {
-          if (detectedGesture === currentGesture) {
+        if (anyDetectedGesture) {
+          if (anyDetectedGesture === currentGesture) {
             gestureFrames++;
             if (gestureFrames === GESTURE_THRESHOLD) {
-              triggerAction(detectedGesture);
+              triggerAction(anyDetectedGesture);
             }
           } else {
-            currentGesture = detectedGesture;
+            currentGesture = anyDetectedGesture;
             gestureFrames = 1;
           }
         } else {
@@ -613,7 +634,7 @@
       } else {
         currentGesture = null;
         gestureFrames = 0;
-        frameBuffer = []; 
+        frameBuffer = {}; 
       }
       canvasCtx.restore();
     }
