@@ -202,6 +202,11 @@
         </div>
       </div>
       <p id="transcript">Click "Start Camera" to begin.</p>
+
+      <div class="manual-tts-container" style="margin-top: 20px; border-top: 1px solid #333; padding-top: 20px; display: flex; gap: 10px;">
+        <input type="text" id="manualText" placeholder="Type something to speak aloud..." style="flex-grow: 1; padding: 12px; border-radius: 8px; border: 1px solid #444; background-color: #2a2a2a; color: white; font-size: 16px;">
+        <button id="speakBtn" style="margin-bottom: 0; padding: 12px 24px; box-shadow: none;">Speak</button>
+      </div>
     </div>
   </div>
 
@@ -218,6 +223,10 @@
     const videoContainer = document.getElementById('videoContainer');
     const loadingText = document.getElementById('loading');
     const statusIndicator = document.getElementById('statusIndicator');
+    
+    // Manual TTS Elements
+    const manualText = document.getElementById('manualText');
+    const speakBtn = document.getElementById('speakBtn');
 
     let cameraStarted = false;
     let currentGesture = null;
@@ -466,6 +475,27 @@
         startButton.style.display = 'block';
         videoContainer.style.display = 'none';
       });
+    });
+
+    // ==========================================
+    // 7. Manual Text-to-Speech
+    // ==========================================
+    speakBtn.addEventListener('click', () => {
+      const textToSpeak = manualText.value.trim();
+      if (textToSpeak !== "") {
+        synth.cancel(); // Cancel any ongoing speech
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        synth.speak(utterance);
+      }
+    });
+    
+    // Trigger "Speak" button when pressing Enter key in the input field
+    manualText.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        speakBtn.click();
+      }
     });
   </script>
 </body>
