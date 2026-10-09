@@ -6,6 +6,7 @@
   <title>ClearSpeak - Text to Sign</title>
 
   <!-- MediaPipe Libraries for drawing -->
+  <script src="config.js" onerror="console.log('No local config.js found.')"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
@@ -353,7 +354,7 @@
       statusText.innerText = "Generating sequence...";
       generateBtn.style.opacity = "0.5";
 
-      let groqApiKey = localStorage.getItem('groqApiKey');
+      let groqApiKey = (typeof GROQ_API_KEY !== 'undefined') ? GROQ_API_KEY : localStorage.getItem('groqApiKey');
       if (!groqApiKey) {
         groqApiKey = prompt("Enter your Groq API Key to enable AI Translation:");
         if (groqApiKey) {
@@ -508,6 +509,10 @@ RULES:
 
     document.getElementById('editApiKeyBtn').addEventListener('click', (e) => {
       e.preventDefault();
+      if (typeof GROQ_API_KEY !== 'undefined') {
+        alert("API Key is currently hardcoded in config.js. Remove it there to edit via this prompt.");
+        return;
+      }
       const currentKey = localStorage.getItem('groqApiKey') || '';
       const newKey = prompt("Update your Groq API Key:", currentKey);
       if (newKey !== null) {
