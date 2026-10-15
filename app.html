@@ -32,6 +32,11 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    * {
+      box-sizing: border-box;
     }
 
     /* Navigation */
@@ -39,24 +44,25 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 15px 40px;
+      padding: clamp(12px, 1.8vh, 16px) clamp(16px, 3vw, 40px);
       background-color: var(--container-bg);
       border-bottom: 1px solid var(--border-color);
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      flex-shrink: 0;
     }
 
     .nav-brand {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 1.4rem;
+      gap: clamp(8px, 1.5vw, 12px);
+      font-size: clamp(1.2rem, 2.5vw, 1.4rem);
       font-weight: bold;
       color: var(--accent-color);
       text-decoration: none;
     }
 
     .nav-brand img {
-      height: 35px;
+      height: clamp(28px, 3.8vh, 36px);
       border-radius: 6px;
     }
     
@@ -68,51 +74,53 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      font-size: clamp(0.9rem, 1.5vw, 1rem);
     }
     .nav-links a:hover {
       color: var(--text-color);
     }
 
-    
-    /* Sidebar Navigation */
+    /* Layout & Sidebar Navigation */
     .app-container {
       display: flex;
       flex-direction: row;
       flex-grow: 1;
+      position: relative;
       overflow: hidden;
     }
     
     .sidebar {
-      width: 250px;
+      width: clamp(220px, 18vw, 260px);
       background-color: var(--container-bg);
       border-right: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
-      padding: 20px 0;
-      transition: margin-left 0.3s ease;
+      padding: clamp(15px, 2vh, 25px) 0;
+      transition: margin-left 0.3s ease, transform 0.3s ease;
       z-index: 90;
+      flex-shrink: 0;
     }
     .sidebar.hidden {
-      margin-left: -250px;
+      margin-left: calc(-1 * clamp(220px, 18vw, 260px));
     }
     
     .sidebar-menu {
       display: flex;
       flex-direction: column;
       gap: 5px;
-      padding: 0 15px;
+      padding: 0 clamp(10px, 1.5vw, 15px);
     }
     .menu-item {
       display: flex;
       align-items: center;
-      gap: 15px;
-      padding: 12px 20px;
+      gap: clamp(10px, 1.5vw, 15px);
+      padding: clamp(10px, 1.5vh, 12px) clamp(14px, 2vw, 20px);
       border-radius: 8px;
       color: var(--text-secondary);
       text-decoration: none;
       font-weight: 500;
       transition: all 0.2s ease;
-      font-size: 1.05rem;
+      font-size: clamp(0.95rem, 1.5vw, 1.05rem);
     }
     .menu-item:hover {
       background-color: rgba(0, 229, 255, 0.1);
@@ -122,48 +130,56 @@
       background-color: var(--accent-color);
       color: var(--bg-color);
     }
-    .menu-icon { font-size: 1.2rem; }
+    .menu-icon { font-size: clamp(1.1rem, 1.8vw, 1.25rem); }
+    
+    .sidebar-backdrop {
+      display: none;
+    }
     
     .main-content {
       flex-grow: 1;
       display: flex;
       flex-direction: column;
       overflow-y: auto;
-      height: calc(100vh - 67px);
+      height: calc(100vh - 65px);
+      width: 100%;
     }
     
     .toggle-btn {
       background: none;
       border: none;
       color: var(--text-color);
-      font-size: 1.5rem;
+      font-size: clamp(1.3rem, 2.5vw, 1.6rem);
       cursor: pointer;
-      margin-right: 15px;
+      margin-right: clamp(10px, 1.5vw, 15px);
       display: flex;
       align-items: center;
       justify-content: center;
     }
     .toggle-btn:hover { color: var(--accent-color); }
 
-    /* Main Dashboard Layout */
+    /* Fluid Relative Dashboard Layout */
     .dashboard {
       display: flex;
       flex-direction: row;
       flex-wrap: wrap;
-      gap: 25px;
-      padding: 30px 40px;
+      gap: clamp(16px, 2vw, 25px);
+      padding: clamp(15px, 2.5vw, 30px) clamp(15px, 3vw, 40px);
       flex-grow: 1;
-      max-width: 1400px;
+      max-width: 1450px;
       margin: 0 auto;
       width: 100%;
       box-sizing: border-box;
+      justify-content: center;
+      align-items: stretch;
     }
 
     /* Left Panel: Camera */
     .camera-panel {
-      flex: 1 1 600px;
+      flex: 1 1 clamp(320px, 50%, 680px);
+      min-width: min(100%, 300px);
       background-color: var(--container-bg);
-      border-radius: 16px;
+      border-radius: clamp(12px, 1.5vw, 16px);
       border: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
@@ -172,7 +188,7 @@
     }
     
     .panel-header {
-      padding: 15px 25px;
+      padding: clamp(10px, 1.5vh, 15px) clamp(16px, 2vw, 25px);
       border-bottom: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
@@ -182,7 +198,7 @@
     
     .panel-header h2 {
       margin: 0;
-      font-size: 1.2rem;
+      font-size: clamp(1.05rem, 1.8vw, 1.2rem);
       font-weight: 600;
     }
     
@@ -190,7 +206,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 0.9rem;
+      font-size: clamp(0.8rem, 1.4vw, 0.9rem);
       color: var(--text-secondary);
       background-color: rgba(255,255,255,0.05);
       padding: 5px 12px;
@@ -214,6 +230,7 @@
       width: 100%;
       background-color: #000;
       aspect-ratio: 4/3;
+      max-height: clamp(260px, 52vh, 520px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -272,15 +289,16 @@
 
     /* Right Panel: Transcript & Controls */
     .controls-panel {
-      flex: 1 1 400px;
+      flex: 1 1 clamp(280px, 35%, 450px);
+      min-width: min(100%, 300px);
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: clamp(15px, 2vw, 20px);
     }
     
     .transcript-card {
       background-color: var(--container-bg);
-      border-radius: 16px;
+      border-radius: clamp(12px, 1.5vw, 16px);
       border: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
@@ -290,14 +308,14 @@
     }
     
     .transcript-body {
-      padding: 25px;
+      padding: clamp(15px, 2vw, 25px);
       flex-grow: 1;
       display: flex;
       flex-direction: column;
     }
     
     .transcript-text {
-      font-size: 2rem;
+      font-size: clamp(1.4rem, 2.8vw, 2rem);
       font-weight: bold;
       line-height: 1.4;
       color: var(--text-color);
@@ -306,45 +324,45 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      min-height: 150px;
+      min-height: clamp(100px, 15vh, 150px);
       word-break: break-word;
     }
     
     .transcript-text.empty {
       color: var(--text-secondary);
       font-weight: normal;
-      font-size: 1.2rem;
+      font-size: clamp(1rem, 1.8vw, 1.2rem);
     }
 
     /* Manual TTS Section */
     .tts-card {
       background-color: var(--container-bg);
-      border-radius: 16px;
+      border-radius: clamp(12px, 1.5vw, 16px);
       border: 1px solid var(--border-color);
-      padding: 25px;
+      padding: clamp(15px, 2vw, 25px);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     }
     
     .tts-card h3 {
       margin-top: 0;
-      font-size: 1.1rem;
+      font-size: clamp(0.95rem, 1.6vw, 1.1rem);
       color: var(--text-secondary);
-      margin-bottom: 15px;
+      margin-bottom: clamp(10px, 1.5vh, 15px);
     }
 
     .tts-input-group {
       display: flex;
-      gap: 12px;
+      gap: clamp(8px, 1.5vw, 12px);
     }
 
     input[type="text"] {
       flex-grow: 1;
-      padding: 14px 18px;
+      padding: clamp(10px, 1.4vw, 14px) clamp(12px, 1.8vw, 18px);
       border-radius: 8px;
       border: 1px solid var(--border-color);
       background-color: var(--card-bg);
       color: var(--text-color);
-      font-size: 1rem;
+      font-size: clamp(0.9rem, 1.5vw, 1rem);
       transition: border-color 0.3s, box-shadow 0.3s;
     }
 
@@ -359,8 +377,8 @@
       background-color: var(--accent-color);
       color: var(--bg-color);
       border: none;
-      padding: 14px 28px;
-      font-size: 1.05rem;
+      padding: clamp(10px, 1.4vw, 14px) clamp(18px, 2.5vw, 28px);
+      font-size: clamp(0.95rem, 1.5vw, 1.05rem);
       font-weight: bold;
       border-radius: 8px;
       cursor: pointer;
@@ -368,6 +386,7 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      justify-content: center;
     }
 
     .btn-primary:hover {
@@ -377,7 +396,7 @@
     }
     
     .btn-icon {
-      padding: 14px;
+      padding: clamp(8px, 1.2vw, 12px);
       background-color: var(--card-bg);
       color: var(--text-color);
       border: 1px solid var(--border-color);
@@ -389,6 +408,38 @@
       border-color: var(--accent-color);
     }
 
+    /* Mobile drawer overlay */
+    @media (max-width: 820px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        height: 100vh;
+        box-shadow: 6px 0 25px rgba(0, 0, 0, 0.7);
+        transform: translateX(0);
+        margin-left: 0 !important;
+        z-index: 1000;
+      }
+      .sidebar.hidden {
+        transform: translateX(-100%);
+      }
+      .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(4px);
+        z-index: 999;
+      }
+      .sidebar-backdrop.active {
+        display: block;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -396,7 +447,7 @@
   <!-- Top Navigation -->
   <nav>
     <div style="display: flex; align-items: center;">
-      <button id="sidebarToggle" class="toggle-btn">☰</button>
+      <button id="sidebarToggle" class="toggle-btn" aria-label="Toggle Navigation">☰</button>
       <a href="index.html" class="nav-brand">
         <img src="logo.png" alt="ClearSpeak">
         ClearSpeak
@@ -408,6 +459,7 @@
   </nav>
 
   <div class="app-container">
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
     <!-- Side Navigation -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-menu">
@@ -497,10 +549,28 @@
   </div>
 
   <script>
-    // Sidebar Toggle
-    document.getElementById('sidebarToggle').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.toggle('hidden');
+    // Responsive Sidebar Toggle
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+    if (window.innerWidth <= 820) {
+      sidebar.classList.add('hidden');
+    }
+
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('hidden');
+      if (sidebarBackdrop && window.innerWidth <= 820) {
+        sidebarBackdrop.classList.toggle('active', !sidebar.classList.contains('hidden'));
+      }
     });
+
+    if (sidebarBackdrop) {
+      sidebarBackdrop.addEventListener('click', () => {
+        sidebar.classList.add('hidden');
+        sidebarBackdrop.classList.remove('active');
+      });
+    }
     // ==========================================
     // 1. Setup Elements & State
     // ==========================================

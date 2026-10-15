@@ -15,7 +15,7 @@
       --text-secondary: #aaaaaa;
     }
 
-        body {
+    body {
       margin: 0;
       background-color: var(--bg-color);
       color: var(--text-color);
@@ -30,73 +30,87 @@
       box-sizing: border-box;
     }
 
-    /* Navigation */
+    /* Top Navigation */
     nav {
       display: flex;
       justify-content: space-between;
-
+      align-items: center;
       width: 100%;
-      max-width: 800px;
-      padding: 20px 0;
-      margin-bottom: 40px;
+      padding: clamp(12px, 1.8vh, 16px) clamp(16px, 3vw, 40px);
+      background-color: var(--container-bg);
+      border-bottom: 1px solid #333;
+      box-sizing: border-box;
+      flex-shrink: 0;
     }
 
     .nav-brand {
       display: flex;
-
-      gap: 15px;
-      font-size: 1.5rem;
+      align-items: center;
+      gap: clamp(8px, 1.5vw, 14px);
+      font-size: clamp(1.2rem, 2.5vw, 1.5rem);
       font-weight: bold;
       color: var(--accent-color);
       text-decoration: none;
     }
 
     .nav-brand img {
-      height: 40px;
+      height: clamp(30px, 4vh, 38px);
       border-radius: 8px;
     }
 
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: clamp(0.9rem, 1.5vw, 1rem);
+      transition: color 0.2s ease;
+    }
+    .nav-links a:hover {
+      color: var(--accent-color);
+    }
 
-    /* Sidebar Navigation */
+    /* Layout & Sidebar */
     .app-container {
       display: flex;
       flex-direction: row;
-      flex-grow: 1;
+      flex: 1;
       width: 100%;
+      min-height: 0;
+      position: relative;
       overflow: hidden;
     }
     
     .sidebar {
-      width: 250px;
+      width: clamp(220px, 18vw, 260px);
       background-color: var(--container-bg);
       border-right: 1px solid #333;
       display: flex;
       flex-direction: column;
-      padding: 20px 0;
-      transition: margin-left 0.3s ease;
+      padding: clamp(15px, 2vh, 25px) 0;
+      transition: margin-left 0.3s ease, transform 0.3s ease;
       z-index: 90;
+      flex-shrink: 0;
     }
     .sidebar.hidden {
-      margin-left: -250px;
+      margin-left: calc(-1 * clamp(220px, 18vw, 260px));
     }
     
     .sidebar-menu {
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      padding: 0 15px;
+      gap: 6px;
+      padding: 0 clamp(10px, 1.5vw, 15px);
     }
     .menu-item {
       display: flex;
-
-      gap: 15px;
-      padding: 12px 20px;
+      align-items: center;
+      gap: clamp(10px, 1.5vw, 15px);
+      padding: clamp(10px, 1.5vh, 13px) clamp(14px, 2vw, 20px);
       border-radius: 8px;
       color: var(--text-secondary);
       text-decoration: none;
       font-weight: 500;
       transition: all 0.2s ease;
-      font-size: 1.05rem;
+      font-size: clamp(0.95rem, 1.5vw, 1.05rem);
     }
     .menu-item:hover {
       background-color: rgba(0, 229, 255, 0.1);
@@ -106,81 +120,90 @@
       background-color: var(--accent-color);
       color: var(--bg-color);
     }
-    .menu-icon { font-size: 1.2rem; }
+    .menu-icon { font-size: clamp(1.1rem, 1.8vw, 1.25rem); }
+    
+    .sidebar-backdrop {
+      display: none;
+    }
     
     .main-content {
-      flex-grow: 1;
+      flex: 1;
       display: flex;
       flex-direction: column;
-
+      align-items: center;
+      justify-content: center;
       overflow-y: auto;
-      padding-top: 40px;
-      height: calc(100vh - 80px);
+      padding: clamp(16px, 3vw, 40px);
       width: 100%;
+      min-height: 0;
+      box-sizing: border-box;
     }
     
     .toggle-btn {
       background: none;
       border: none;
       color: var(--text-color);
-      font-size: 1.5rem;
+      font-size: clamp(1.3rem, 2.5vw, 1.6rem);
       cursor: pointer;
-      margin-right: 15px;
+      margin-right: clamp(10px, 1.5vw, 15px);
       display: flex;
-
+      align-items: center;
       justify-content: center;
     }
     .toggle-btn:hover { color: var(--accent-color); }
 
-    /* TTS Container */
+    /* Responsive Relative TTS Container */
     .tts-container {
-      width: 100%;
-      max-width: 800px;
+      width: min(100%, 780px);
+      margin: auto;
       background-color: var(--container-bg);
-      border-radius: 16px;
-      padding: 40px;
+      border-radius: clamp(14px, 2vw, 20px);
+      padding: clamp(20px, 4vw, 40px);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      border: 1px solid #2a2a2a;
       box-sizing: border-box;
+      transition: all 0.3s ease;
     }
 
     h1 {
       color: var(--text-color);
       margin-top: 0;
-      margin-bottom: 10px;
-      font-size: 2.2rem;
+      margin-bottom: clamp(6px, 1vh, 10px);
+      font-size: clamp(1.6rem, 3.5vw, 2.3rem);
     }
 
     p.subtitle {
       color: var(--text-secondary);
-      margin-bottom: 30px;
-      font-size: 1.1rem;
+      margin-bottom: clamp(18px, 3vh, 30px);
+      font-size: clamp(0.95rem, 1.8vw, 1.1rem);
+      line-height: 1.5;
     }
 
     textarea {
       width: 100%;
-      height: 200px;
+      height: clamp(140px, 24vh, 220px);
       background-color: #2a2a2a;
       border: 2px solid #333;
       border-radius: 12px;
       color: white;
-      font-size: 1.2rem;
-      padding: 20px;
+      font-size: clamp(1rem, 1.8vw, 1.2rem);
+      padding: clamp(14px, 2vw, 20px);
       resize: vertical;
       box-sizing: border-box;
       font-family: inherit;
-      transition: border-color 0.3s;
-      margin-bottom: 25px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      margin-bottom: clamp(16px, 2.5vh, 25px);
     }
 
     textarea:focus {
       outline: none;
       border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.2);
     }
 
     .controls {
       display: flex;
-      gap: 15px;
-
+      gap: clamp(10px, 2vw, 15px);
       flex-wrap: wrap;
     }
 
@@ -188,15 +211,15 @@
       background-color: var(--accent-color);
       color: var(--bg-color);
       border: none;
-      padding: 14px 32px;
-      font-size: 1.1rem;
+      padding: clamp(11px, 1.6vw, 14px) clamp(22px, 3vw, 32px);
+      font-size: clamp(0.95rem, 1.8vw, 1.1rem);
       font-weight: bold;
       border-radius: 30px;
       cursor: pointer;
       transition: all 0.3s ease;
       box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);
-      display: flex;
-
+      display: inline-flex;
+      align-items: center;
       gap: 10px;
     }
 
@@ -223,25 +246,58 @@
       transform: none;
       box-shadow: none;
     }
+
+    /* Mobile drawer overlay */
+    @media (max-width: 820px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        height: 100vh;
+        box-shadow: 6px 0 25px rgba(0, 0, 0, 0.7);
+        transform: translateX(0);
+        margin-left: 0 !important;
+        z-index: 1000;
+      }
+      .sidebar.hidden {
+        transform: translateX(-100%);
+      }
+      .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(4px);
+        z-index: 999;
+      }
+      .sidebar-backdrop.active {
+        display: block;
+      }
+    }
   </style>
 </head>
 <body>
 
   <!-- Top Navigation -->
-  <nav style="padding: 15px 40px; border-bottom: 1px solid #333; background-color: var(--container-bg); max-width: 100%; margin-bottom: 0;">
+  <nav>
     <div style="display: flex; align-items: center;">
-      <button id="sidebarToggle" class="toggle-btn">☰</button>
+      <button id="sidebarToggle" class="toggle-btn" aria-label="Toggle Navigation">☰</button>
       <a href="index.html" class="nav-brand">
         <img src="logo.png" alt="ClearSpeak">
         ClearSpeak
       </a>
     </div>
     <div class="nav-links">
-      <a href="index.html" style="color: var(--text-secondary); text-decoration: none;">&larr; Back to Home</a>
+      <a href="index.html">&larr; Back to Home</a>
     </div>
   </nav>
 
   <div class="app-container">
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
     <!-- Side Navigation -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-menu">
@@ -286,10 +342,28 @@
   </div>
 
   <script>
-    // Sidebar Toggle
-    document.getElementById('sidebarToggle').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.toggle('hidden');
+    // Responsive Sidebar Toggle
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+    if (window.innerWidth <= 820) {
+      sidebar.classList.add('hidden');
+    }
+
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('hidden');
+      if (sidebarBackdrop && window.innerWidth <= 820) {
+        sidebarBackdrop.classList.toggle('active', !sidebar.classList.contains('hidden'));
+      }
     });
+
+    if (sidebarBackdrop) {
+      sidebarBackdrop.addEventListener('click', () => {
+        sidebar.classList.add('hidden');
+        sidebarBackdrop.classList.remove('active');
+      });
+    }
     const textInput = document.getElementById('textInput');
     const speakBtn = document.getElementById('speakBtn');
     const clearBtn = document.getElementById('clearBtn');
